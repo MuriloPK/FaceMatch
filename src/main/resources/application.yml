@@ -1,0 +1,23 @@
+server:
+  servlet:
+    context-path: /faces
+
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//ocihml-scan:1521/GERAL19_CREDLIHM.paas.oracle.com
+    username: credline
+    password: credline
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  main:
+    banner-mode: console
+    
+springdoc:
+  swagger-ui:
+    path: /swagger
+    
+logging:
+  level:
+    br.com.credsystem.unico.facematchpoc: TRACE
+    org.springframework.web: INFO
+    org.hibernate: INFO
