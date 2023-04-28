@@ -1,0 +1,49 @@
+package br.com.credsystem.unico.facematchpoc.application.service;
+
+import org.springframework.stereotype.Service;
+
+import br.com.credsystem.unico.facematchpoc.application.api.FaceMatchRequest;
+import br.com.credsystem.unico.facematchpoc.application.api.FaceMatchResponse;
+import br.com.credsystem.unico.facematchpoc.domain.Proposta;
+import br.com.credsystem.unico.facematchpoc.infra.ClientBucket;
+import feign.FeignException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
+@Service
+@RequiredArgsConstructor
+public class FaceMatchUnicoIntegration implements FaceMatchIntegration {
+	private final FaceMatchFeignClient faceMatchClient;
+	private final ClientBucket clientBucket;
+
+	@Override
+	public FaceMatchResponse fazerFaceMatch(Proposta proposta) {
+		log.info("[inicia] FaceMatchUnicoIntegration - fazerFaceMatch");
+		FaceMatchRequest request = new FaceMatchRequest(proposta,clientBucket);
+		FaceMatchResponse response = enviarSolicitacaoFaceMatch(request);
+		log.info("[finaliza] FaceMatchUnicoIntegration - fazerFaceMatch");
+		return response;
+	}
+
+	private FaceMatchResponse enviarSolicitacaoFaceMatch(FaceMatchRequest request) {
+		log.info("[inicia] FaceMatchUnicoIntegration - enviarSolicitacaoFaceMatch");
+		try {
+			FaceMatchResponse response = faceMatchClient.enviarSolicitacaoFaceMatch(APIKEY, TOKEN, request);
+			response.confirmaProcessamento();
+			return response;
+		} catch (FeignException ex) {
+			log.error("Erro ao fazer FaceMatch: {}", ex.getMessage());
+			return FaceMatchResponse.builder()
+					.retorno(false)
+					.descricaoErro(ex.getMessage())
+					.processado("N")
+					.build();
+		} finally {
+			log.info("[finaliza] FaceMatchUnicoIntegration - enviarSolicitacaoFaceMatch");
+		}
+	}
+	private static final String APIKEY = "7e426bc2-652e-4bce-b6a1-7922fa44ebc9";
+	private static final String TOKEN = 
+			"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzYjNhN2NiZC03MDlkLTRhMjktYjFlNC04NDdkMjIzZDczZTgiLCJ0dHlwIjoiYWNjZXNzIiwiYWN0eXAiOiJzZXJ2aWNlIiwiZ3R5cCI6Imp3dF9iZWFyZXIiLCJpc3MiOiJodHRwczovL2lkZW50aXR5aG9tb2xvZy5hY2Vzc28uaW8iLCJjbGlkIjoiZTVlYzIyYzUtNGU4Yi00YTNlLTg5YWEtNjM4MjcxNDQ0NDAxIiwiYXVkIjoiYTZkMjkyN2YtYjQ1Yi00ZmEyLWI0ZDEtZmFmYjljZDZiNThhIiwiYXVkX2hyIjoiQ1JFRCBTWVNURU0iLCJzdWIiOiJkODg2NjBjNy0wOTlmLTQ3YTQtODg2NC0wNjI1YmZlYjI4ZDIiLCJpYXQiOjE2Nzg5MDc3NzksImV4cCI6MTY3ODkxMTM3OSwic2NvcGUiOnsiYmlvIjpbIjkwMDoyODMyMzFiMi1kN2I2LTRkY2ItODZkYS03YjljMWJjYzcwMzciLCI5MDE6MjgzMjMxYjItZDdiNi00ZGNiLTg2ZGEtN2I5YzFiY2M3MDM3IiwiOTAyOjI4MzIzMWIyLWQ3YjYtNGRjYi04NmRhLTdiOWMxYmNjNzAzNyIsIjkwMzoyODMyMzFiMi1kN2I2LTRkY2ItODZkYS03YjljMWJjYzcwMzciLCI5MDQ6MjgzMjMxYjItZDdiNi00ZGNiLTg2ZGEtN2I5YzFiY2M3MDM3IiwiOTA1OjI4MzIzMWIyLWQ3YjYtNGRjYi04NmRhLTdiOWMxYmNjNzAzNyIsIjkwNjoyODMyMzFiMi1kN2I2LTRkY2ItODZkYS03YjljMWJjYzcwMzciLCI5MDc6MjgzMjMxYjItZDdiNi00ZGNiLTg2ZGEtN2I5YzFiY2M3MDM3IiwiOTA4OjI4MzIzMWIyLWQ3YjYtNGRjYi04NmRhLTdiOWMxYmNjNzAzNyIsIjkwOToyODMyMzFiMi1kN2I2LTRkY2ItODZkYS03YjljMWJjYzcwMzciLCI5MTA6MjgzMjMxYjItZDdiNi00ZGNiLTg2ZGEtN2I5YzFiY2M3MDM3IiwiOTExOjI4MzIzMWIyLWQ3YjYtNGRjYi04NmRhLTdiOWMxYmNjNzAzNyIsIjkxMjoyODMyMzFiMi1kN2I2LTRkY2ItODZkYS03YjljMWJjYzcwMzciLCI5MTM6MjgzMjMxYjItZDdiNi00ZGNiLTg2ZGEtN2I5YzFiY2M3MDM3IiwiOTE0OjI4MzIzMWIyLWQ3YjYtNGRjYi04NmRhLTdiOWMxYmNjNzAzNyIsIjkxNToyODMyMzFiMi1kN2I2LTRkY2ItODZkYS03YjljMWJjYzcwMzciLCI5MTY6MjgzMjMxYjItZDdiNi00ZGNiLTg2ZGEtN2I5YzFiY2M3MDM3IiwiOTE3OjI4MzIzMWIyLWQ3YjYtNGRjYi04NmRhLTdiOWMxYmNjNzAzNyIsIjkxODoyODMyMzFiMi1kN2I2LTRkY2ItODZkYS03YjljMWJjYzcwMzciXX0sImV4dHJhJCI6eyJkaXJJZCI6IjczYjdlMzM1LWJjOGEtNDJjMS05N2Y2LTBjMWU1MWQ3YTIyOSIsImlzX2FjZXNzbyI6ZmFsc2UsImNsaWVudE5hbWUiOiJVbmljbyBDaGVjayJ9fQ.p6BxjfZrzwWAE6c1GPVrLbLb6eaF3eROTPTABRcmGVCJIrxB2MI1PwqMJPMh0ylP53-OQ-e4uGLV2VPWexxDV2Hn4y3j0b3FHJtL_hV_poyxxTl766jeU5-p93-BuVDhsJ1HoxGTdmg3at7_uDai23tK6gPBUfk-2iM4HSTvN1435zauagj8Gqyx1c9TNN9iNQcqbUPYXZ9IExQ4M2AtktZQ3ulSh9E0n-Y_Dvm-B_gsJhm-UdROwVx7LaAYuIou7SZy3hW_qUUek3QvGY46yeAmd14Se_-BopyMnkMz4IhAaC2LJ8Au1ycQCXYyXSdnYbrWF6982_DpanmzEODnYQ";
+}
